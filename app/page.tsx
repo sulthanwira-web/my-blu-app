@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   Wallet, 
   ArrowUpRight, 
@@ -14,15 +14,16 @@ import {
   Eye,
   EyeOff,
   ChevronRight,
-  Sparkles
+  FileText,
+  Printer,
+  CheckCircle2,
+  Share2,
+  Clock
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 
-export default function BluDashboard() {
+export default function BluDashboardPro() {
   const [showBalance, setShowBalance] = useState(true);
-  const [activeTab, setActiveTab] = useState("beranda");
   
-  // State Data
   const [pockets, setPockets] = useState([
     { id: 1, name: "Kantong Utama", balance: 5450000, type: "Utama", target: null, progress: 0, icon: Wallet },
     { id: 2, name: "Jajan & Makan Harian", balance: 850000, type: "Harian", target: 1500000, progress: 57, icon: Coffee },
@@ -31,79 +32,82 @@ export default function BluDashboard() {
   ]);
 
   const [transactions, setTransactions] = useState([
-    { id: 1, title: "Kopi Kenangan Mantan", category: "Makanan", tag: "Harian", amount: -28000, type: "out", date: "Hari ini" },
-    { id: 2, title: "Gaji Bulanan PT Digital", category: "Pemasukan", tag: "Bulanan", amount: 8500000, type: "in", date: "Kemarin" },
-    { id: 3, title: "Voucher Streaming Netflix", category: "Hiburan", tag: "Bulanan", amount: -186000, type: "out", date: "08 Nov" },
-    { id: 4, title: "Gojek Ride Ke Kantor", category: "Transportasi", tag: "Harian", amount: -35000, type: "out", date: "07 Nov" },
+    { id: 1718001, title: "Kopi Kenangan Mantan", category: "Makanan", tag: "Harian", amount: -28000, type: "out", date: "10 Nov 2026, 08:30", ref: "BLU-9928103" },
+    { id: 2718002, title: "Gaji Bulanan PT Digital", category: "Pemasukan", tag: "Bulanan", amount: 8500000, type: "in", date: "09 Nov 2026, 09:00", ref: "BLU-8819203" },
   ]);
 
-  // Modal Control
+  // Modal Controls
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"transaction" | "transfer">("transaction");
-  
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [latestTx, setLatestTx] = useState<any>(null);
+
   // Form State
   const [txTitle, setTxTitle] = useState("");
   const [txAmount, setTxAmount] = useState("");
   const [txType, setTxType] = useState<"in" | "out">("out");
-  const [selectedPocket, setSelectedPocket] = useState("Kantong Utama");
+  const [selectedPocket, setSelectedPocket] = useState("Jajan & Makan Harian");
+  
+  // Custom Interval State
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [intervalDays, setIntervalDays] = useState("1");
 
-  // Total Saldo
   const totalBalance = pockets.reduce((acc, curr) => acc + curr.balance, 0);
 
-  // 1. Fungsi Tambah Transaksi
+  // Handler saat jenis transaksi diubah (Pemasukan / Pengeluaran)
+  const handleTypeChange = (type: "in" | "out") => {
+    setTxType(type);
+    if (type === "in") {
+      setSelectedPocket("Kantong Utama"); // Pemasukan otomatis ke Kantong Utama
+    } else {
+      setSelectedPocket("Jajan & Makan Harian"); // Pengeluaran default ke harian
+    }
+  };
+
   const handleAddTransaction = (e: React.FormEvent) => {
     e.preventDefault();
     const numAmount = parseFloat(txAmount);
     if (!txTitle || isNaN(numAmount) || numAmount <= 0) return;
 
     const finalAmount = txType === "out" ? -numAmount : numAmount;
-
-    const newTx = {
+    const newTxData = {
       id: Date.now(),
       title: txTitle,
       category: txType === "out" ? "Pengeluaran" : "Pemasukan",
-      tag: "Umum",
+      tag: isRecurring ? `Berkala tiap ${intervalDays} hari` : "Sekali",
       amount: finalAmount,
       type: txType,
-      date: "Baru saja"
+      date: new Date().toLocaleDateString("id-ID", { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      ref: `BLU-${Math.floor(100000000 + Math.random() * 900000000)}`
     };
 
-    setTransactions([newTx, ...transactions]);
+    setTransactions([newTxData, ...transactions]);
+    setPockets(pockets.map(p => p.name === selectedPocket ? { ...p, balance: p.balance + finalAmount } : p));
 
-    // Update Saldo Kantong
-    setPockets(pockets.map(p => {
-      if (p.name === selectedPocket) {
-        return { ...p, balance: p.balance + finalAmount };
-      }
-      return p;
-    }));
+    setLatestTx(newTxData);
+    setIsModalOpen(false);
+    setIsReceiptOpen(true);
 
     setTxTitle("");
     setTxAmount("");
-    setIsModalOpen(false);
+    setIsRecurring(false);
   };
 
-  // 2. Fungsi Export Laporan CSV/Excel
   const handleExportCSV = () => {
-    const headers = ["ID", "Tanggal", "Keterangan", "Kategori", "Jenis", "Nominal (Rp)"];
-    const rows = transactions.map(t => [
-      t.id,
-      t.date,
-      `"${t.title}"`,
-      t.category,
-      t.type === "in" ? "Pemasukan" : "Pengeluaran",
-      t.amount
-    ]);
-
+    const headers = ["ID Ref", "Tanggal", "Keterangan", "Kategori", "Interval/Tag", "Nominal (Rp)"];
+    const rows = transactions.map(t => [t.ref, t.date, `"${t.title}"`, t.category, `"${t.tag}"`, t.amount]);
     const csvContent = "\ufeff" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `Laporan_blu_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Laporan_Keuangan_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleExportPDF = () => {
+    window.print();
   };
 
   const formatRp = (val: number) => {
@@ -123,18 +127,19 @@ export default function BluDashboard() {
               </div>
             </div>
             <div>
-              <p className="text-xs text-blue-200/60">Selamat datang,</p>
+              <p className="text-xs text-blue-200/65">Selamat datang,</p>
               <h1 className="text-sm font-semibold text-white">Sulthan</h1>
             </div>
           </div>
           
-          <button 
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg hover:bg-cyan-900/60 transition"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Ekspor</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button onClick={handleExportCSV} title="Download CSV" className="p-2 text-xs font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg hover:bg-cyan-900/60 transition">
+              <Download className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={handleExportPDF} title="Cetak / Simpan PDF" className="p-2 text-xs font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg hover:bg-cyan-900/60 transition">
+              <FileText className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         {/* Hero Card Total Saldo */}
@@ -154,20 +159,13 @@ export default function BluDashboard() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <button 
-                onClick={() => { setModalType("transaction"); setIsModalOpen(true); }}
-                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-xl text-xs font-semibold text-white transition active:scale-95"
-              >
+              <button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 py-2.5 px-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-xl text-xs font-semibold text-white transition active:scale-95">
                 <Plus className="w-4 h-4 text-cyan-300" />
                 <span>Catat Transaksi</span>
               </button>
-
-              <button 
-                onClick={() => { setModalType("transfer"); setIsModalOpen(true); }}
-                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-cyan-400 hover:bg-cyan-300 text-blue-950 rounded-xl text-xs font-bold transition active:scale-95 shadow-md shadow-cyan-400/20"
-              >
-                <Repeat className="w-4 h-4" />
-                <span>Pindah Dana</span>
+              <button onClick={handleExportPDF} className="flex items-center justify-center gap-2 py-2.5 px-3 bg-cyan-400 hover:bg-cyan-300 text-blue-950 rounded-xl text-xs font-bold transition active:scale-95 shadow-md">
+                <Printer className="w-4 h-4" />
+                <span>Cetak Laporan</span>
               </button>
             </div>
           </div>
@@ -180,9 +178,9 @@ export default function BluDashboard() {
               <Wallet className="w-3.5 h-3.5 text-cyan-400" />
               <span>Kantong Aktif ({pockets.length})</span>
             </h2>
-            <button className="text-xs text-cyan-400 hover:underline flex items-center gap-0.5">
+            <span className="text-xs text-cyan-400 cursor-pointer hover:underline flex items-center gap-0.5">
               Lihat Semua <ChevronRight className="w-3 h-3" />
-            </button>
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -195,11 +193,9 @@ export default function BluDashboard() {
                       <div className="p-2 rounded-xl bg-blue-950/80 text-cyan-400 border border-blue-800/40">
                         <IconComp className="w-4 h-4" />
                       </div>
-                      {pocket.type !== "Utama" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-900/50 text-blue-200 border border-blue-700/30">
-                          {pocket.type}
-                        </span>
-                      )}
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-900/50 text-blue-200 border border-blue-700/30">
+                        {pocket.type}
+                      </span>
                     </div>
                     <p className="text-xs text-blue-200/70 font-medium line-clamp-1">{pocket.name}</p>
                     <p className="text-sm font-bold text-white mt-0.5">
@@ -231,7 +227,7 @@ export default function BluDashboard() {
               <Repeat className="w-3.5 h-3.5 text-cyan-400" />
               <span>Transaksi Terakhir</span>
             </h2>
-            <button className="text-xs text-cyan-400 hover:underline">Semua</button>
+            <span className="text-xs text-cyan-400 cursor-pointer">Semua</span>
           </div>
 
           <div className="space-y-2.5">
@@ -259,12 +255,13 @@ export default function BluDashboard() {
 
       </div>
 
-      {/* Modal Catat Transaksi / Pindah Dana */}
+      {/* MODAL TRANSAKSI DENGAN TRANSISI HALUS (FADE & SCALE) */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-[#0d1635] border border-blue-800/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl">
-            <h3 className="text-sm font-bold text-white mb-4">
-              {modalType === "transaction" ? "Catat Transaksi Baru" : "Pindah Dana Antar Kantong"}
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300 animate-fadeIn">
+          <div className="bg-[#0d1635] border border-blue-800/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl transform transition-transform duration-300 scale-100">
+            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-cyan-400" />
+              <span>Catat Transaksi & Jadwal Berkala</span>
             </h3>
 
             <form onSubmit={handleAddTransaction} className="space-y-3">
@@ -273,10 +270,10 @@ export default function BluDashboard() {
                 <input 
                   type="text" 
                   required
-                  placeholder="Misal: Jajan Kopi" 
+                  placeholder={txType === "in" ? "Misal: Gaji Bulanan / Bonus" : "Misal: Jajan Kopi / Wifi"} 
                   value={txTitle} 
                   onChange={(e) => setTxTitle(e.target.value)}
-                  className="w-full bg-[#070b19] border border-blue-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
+                  className="w-full bg-[#070b19] border border-blue-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 transition"
                 />
               </div>
 
@@ -288,64 +285,94 @@ export default function BluDashboard() {
                   placeholder="50000" 
                   value={txAmount} 
                   onChange={(e) => setTxAmount(e.target.value)}
-                  className="w-full bg-[#070b19] border border-blue-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
+                  className="w-full bg-[#070b19] border border-blue-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 transition"
                 />
               </div>
 
-              {modalType === "transaction" && (
-                <div>
-                  <label className="text-[11px] text-blue-200/70 block mb-1">Jenis Transaksi</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      type="button" 
-                      onClick={() => setTxType("out")} 
-                      className={`py-1.5 text-xs rounded-lg border font-medium ${txType === "out" ? "bg-rose-950 border-rose-500 text-rose-300" : "bg-[#070b19] border-blue-900/40 text-blue-300"}`}
-                    >
-                      Pengeluaran
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => setTxType("in")} 
-                      className={`py-1.5 text-xs rounded-lg border font-medium ${txType === "in" ? "bg-emerald-950 border-emerald-500 text-emerald-300" : "bg-[#070b19] border-blue-900/40 text-blue-300"}`}
-                    >
-                      Pemasukan
-                    </button>
-                  </div>
+              <div>
+                <label className="text-[11px] text-blue-200/70 block mb-1">Jenis Transaksi</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => handleTypeChange("out")} className={`py-1.5 text-xs rounded-lg border font-medium transition ${txType === "out" ? "bg-rose-950 border-rose-500 text-rose-300 shadow-sm" : "bg-[#070b19] border-blue-900/40 text-blue-300"}`}>Pengeluaran</button>
+                  <button type="button" onClick={() => handleTypeChange("in")} className={`py-1.5 text-xs rounded-lg border font-medium transition ${txType === "in" ? "bg-emerald-950 border-emerald-500 text-emerald-300 shadow-sm" : "bg-[#070b19] border-blue-900/40 text-blue-300"}`}>Pemasukan</button>
                 </div>
-              )}
+              </div>
+
+              {/* Custom Interval Setting */}
+              <div className="p-3 bg-blue-950/40 border border-blue-900/40 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-blue-200 font-medium">Ulangi Berkala Otomatis?</span>
+                  <input type="checkbox" checked={isRecurring} onChange={(e) => setIsRecurring(e.target.checked)} className="w-4 h-4 accent-cyan-400 cursor-pointer" />
+                </div>
+
+                {isRecurring && (
+                  <div>
+                    <label className="text-[10px] text-cyan-300 block mb-1">Atur Interval Waktu</label>
+                    <select value={intervalDays} onChange={(e) => setIntervalDays(e.target.value)} className="w-full bg-[#070b19] border border-cyan-500/40 rounded-lg px-2 py-1.5 text-xs text-cyan-200 focus:outline-none">
+                      <option value="1">Setiap 1 Hari Sekali</option>
+                      <option value="2">Setiap 2 Hari Sekali</option>
+                      <option value="3">Setiap 3 Hari Sekali</option>
+                      <option value="7">Setiap 7 Hari Sekali (Mingguan)</option>
+                      <option value="14">Setiap 14 Hari Sekali</option>
+                      <option value="30">Setiap 30 Hari Sekali (Bulanan)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
 
               <div>
-                <label className="text-[11px] text-blue-200/70 block mb-1">Pilih Kantong</label>
+                <label className="text-[11px] text-blue-200/70 block mb-1">Simpan ke Kantong</label>
                 <select 
                   value={selectedPocket}
                   onChange={(e) => setSelectedPocket(e.target.value)}
                   className="w-full bg-[#070b19] border border-blue-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
                 >
-                  {pockets.map(p => (
-                    <option key={p.id} value={p.name}>{p.name}</option>
-                  ))}
+                  {pockets.map(p => (<option key={p.id} value={p.name}>{p.name}</option>))}
                 </select>
               </div>
 
               <div className="flex gap-2 pt-2">
-                <button 
-                  type="button" 
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2 bg-blue-950 hover:bg-blue-900 text-blue-200 text-xs rounded-xl border border-blue-800/40"
-                >
-                  Batal
-                </button>
-                <button 
-                  type="submit" 
-                  className="flex-1 py-2 bg-cyan-400 hover:bg-cyan-300 text-blue-950 font-bold text-xs rounded-xl shadow-md shadow-cyan-400/20"
-                >
-                  Simpan
-                </button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2 bg-blue-950 hover:bg-blue-900 text-blue-200 text-xs rounded-xl border border-blue-800/40 transition">Batal</button>
+                <button type="submit" className="flex-1 py-2 bg-cyan-400 hover:bg-cyan-300 text-blue-950 font-bold text-xs rounded-xl shadow-md transition">Simpan</button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* MODAL STRUK DIGITAL */}
+      {isReceiptOpen && latestTx && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-[#0e1738] border border-cyan-500/30 rounded-3xl w-full max-w-xs p-6 shadow-2xl text-center relative overflow-hidden">
+            <div className="w-12 h-12 bg-emerald-950 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-400 mb-1">Transaksi Berhasil</h3>
+            <p className="text-[10px] text-blue-300/60 mb-4">bluDigital Secure Receipt</p>
+
+            <div className="text-xl font-extrabold text-white mb-4">
+              {latestTx.type === "in" ? "+" : ""}{formatRp(latestTx.amount)}
+            </div>
+
+            <div className="bg-[#070b19]/80 border border-blue-900/40 rounded-2xl p-3.5 text-left space-y-2 mb-5 text-xs">
+              <div className="flex justify-between text-blue-300/70"><span>Status</span><span className="text-emerald-400 font-semibold">SUCCESS</span></div>
+              <div className="flex justify-between text-blue-300/70"><span>No. Ref</span><span className="text-white font-mono">{latestTx.ref}</span></div>
+              <div className="flex justify-between text-blue-300/70"><span>Waktu</span><span className="text-white">{latestTx.date}</span></div>
+              <div className="flex justify-between text-blue-300/70"><span>Keterangan</span><span className="text-white font-medium">{latestTx.title}</span></div>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => alert("Struk berhasil dibagikan!")} className="flex-1 py-2.5 bg-blue-900/60 hover:bg-blue-800 text-cyan-300 text-xs font-semibold rounded-xl border border-blue-700/40 flex items-center justify-center gap-1.5">
+                <Share2 className="w-3.5 h-3.5" /> Bagikan
+              </button>
+              <button onClick={() => setIsReceiptOpen(false)} className="flex-1 py-2.5 bg-cyan-400 hover:bg-cyan-300 text-blue-950 text-xs font-bold rounded-xl shadow-md">
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
