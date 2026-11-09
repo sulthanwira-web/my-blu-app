@@ -1,4 +1,3 @@
-import { BluLogo } from "@/components/BluLogo";
 "use client";
 
 import React, { useState } from "react";
@@ -21,6 +20,7 @@ import {
   Share2,
   Clock
 } from "lucide-react";
+import { BluLogo } from "@/components/BluLogo";
 
 export default function BluDashboardPro() {
   const [showBalance, setShowBalance] = useState(true);
@@ -37,30 +37,26 @@ export default function BluDashboardPro() {
     { id: 2718002, title: "Gaji Bulanan PT Digital", category: "Pemasukan", tag: "Bulanan", amount: 8500000, type: "in", date: "09 Nov 2026, 09:00", ref: "BLU-8819203" },
   ]);
 
-  // Modal Controls
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [latestTx, setLatestTx] = useState<any>(null);
 
-  // Form State
   const [txTitle, setTxTitle] = useState("");
   const [txAmount, setTxAmount] = useState("");
   const [txType, setTxType] = useState<"in" | "out">("out");
   const [selectedPocket, setSelectedPocket] = useState("Jajan & Makan Harian");
   
-  // Custom Interval State
   const [isRecurring, setIsRecurring] = useState(false);
   const [intervalDays, setIntervalDays] = useState("1");
 
   const totalBalance = pockets.reduce((acc, curr) => acc + curr.balance, 0);
 
-  // Handler saat jenis transaksi diubah (Pemasukan / Pengeluaran)
   const handleTypeChange = (type: "in" | "out") => {
     setTxType(type);
     if (type === "in") {
-      setSelectedPocket("Kantong Utama"); // Pemasukan otomatis ke Kantong Utama
+      setSelectedPocket("Kantong Utama");
     } else {
-      setSelectedPocket("Jajan & Makan Harian"); // Pengeluaran default ke harian
+      setSelectedPocket("Jajan & Makan Harian");
     }
   };
 
@@ -118,29 +114,10 @@ export default function BluDashboardPro() {
   return (
     <div className="min-h-screen bg-[#070b19] text-white flex justify-center items-center p-0 sm:p-4 font-sans">
       <div className="w-full max-w-md bg-[#0a1128] sm:rounded-3xl border border-blue-900/30 overflow-hidden shadow-2xl flex flex-col min-h-screen sm:min-h-[840px]">
-
-          {/* Top Header */}
-  <div className="p-5 flex items-center justify-between border-b border-white/5 bg-[#0d1635]">
-  <div className="flex items-center gap-3">
-    {/* Panggil Logo B Futuristik Kustom */}
-    <BluLogo />
-  </div>
-  
-  {/* Tombol Ekspor CSV & PDF */}
-  <div className="flex items-center gap-1.5">
-    <button onClick={handleExportCSV} title="Download CSV" className="p-2 text-xs font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg hover:bg-cyan-900/60 transition">
-      <Download className="w-3.5 h-3.5" />
-    </button>
-    <button onClick={handleExportPDF} title="Cetak / Simpan PDF" className="p-2 text-xs font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg hover:bg-cyan-900/60 transition">
-      <FileText className="w-3.5 h-3.5" />
-    </button>
-  </div>
-</div>
-            <div>
-              <p className="text-xs text-blue-200/65">Selamat datang,</p>
-              <h1 className="text-sm font-semibold text-white">Sulthan</h1>
-            </div>
-          </div>
+        
+        {/* Top Header */}
+        <div className="p-5 flex items-center justify-between border-b border-white/5 bg-[#0d1635]">
+          <BluLogo />
           
           <div className="flex items-center gap-1.5">
             <button onClick={handleExportCSV} title="Download CSV" className="p-2 text-xs font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg hover:bg-cyan-900/60 transition">
@@ -265,10 +242,10 @@ export default function BluDashboardPro() {
 
       </div>
 
-      {/* MODAL TRANSAKSI DENGAN TRANSISI HALUS (FADE & SCALE) */}
+      {/* MODAL TRANSAKSI */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300 animate-fadeIn">
-          <div className="bg-[#0d1635] border border-blue-800/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl transform transition-transform duration-300 scale-100">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-[#0d1635] border border-blue-800/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl">
             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
               <Clock className="w-4 h-4 text-cyan-400" />
               <span>Catat Transaksi & Jadwal Berkala</span>
@@ -283,7 +260,7 @@ export default function BluDashboardPro() {
                   placeholder={txType === "in" ? "Misal: Gaji Bulanan / Bonus" : "Misal: Jajan Kopi / Wifi"} 
                   value={txTitle} 
                   onChange={(e) => setTxTitle(e.target.value)}
-                  className="w-full bg-[#070b19] border border-blue-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 transition"
+                  className="w-full bg-[#070b19] border border-blue-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
                 />
               </div>
 
@@ -295,19 +272,18 @@ export default function BluDashboardPro() {
                   placeholder="50000" 
                   value={txAmount} 
                   onChange={(e) => setTxAmount(e.target.value)}
-                  className="w-full bg-[#070b19] border border-blue-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 transition"
+                  className="w-full bg-[#070b19] border border-blue-900/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
                 />
               </div>
 
               <div>
                 <label className="text-[11px] text-blue-200/70 block mb-1">Jenis Transaksi</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => handleTypeChange("out")} className={`py-1.5 text-xs rounded-lg border font-medium transition ${txType === "out" ? "bg-rose-950 border-rose-500 text-rose-300 shadow-sm" : "bg-[#070b19] border-blue-900/40 text-blue-300"}`}>Pengeluaran</button>
-                  <button type="button" onClick={() => handleTypeChange("in")} className={`py-1.5 text-xs rounded-lg border font-medium transition ${txType === "in" ? "bg-emerald-950 border-emerald-500 text-emerald-300 shadow-sm" : "bg-[#070b19] border-blue-900/40 text-blue-300"}`}>Pemasukan</button>
+                  <button type="button" onClick={() => handleTypeChange("out")} className={`py-1.5 text-xs rounded-lg border font-medium ${txType === "out" ? "bg-rose-950 border-rose-500 text-rose-300 shadow-sm" : "bg-[#070b19] border-blue-900/40 text-blue-300"}`}>Pengeluaran</button>
+                  <button type="button" onClick={() => handleTypeChange("in")} className={`py-1.5 text-xs rounded-lg border font-medium ${txType === "in" ? "bg-emerald-950 border-emerald-500 text-emerald-300 shadow-sm" : "bg-[#070b19] border-blue-900/40 text-blue-300"}`}>Pemasukan</button>
                 </div>
               </div>
 
-              {/* Custom Interval Setting */}
               <div className="p-3 bg-blue-950/40 border border-blue-900/40 rounded-xl space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-blue-200 font-medium">Ulangi Berkala Otomatis?</span>
@@ -341,8 +317,8 @@ export default function BluDashboardPro() {
               </div>
 
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2 bg-blue-950 hover:bg-blue-900 text-blue-200 text-xs rounded-xl border border-blue-800/40 transition">Batal</button>
-                <button type="submit" className="flex-1 py-2 bg-cyan-400 hover:bg-cyan-300 text-blue-950 font-bold text-xs rounded-xl shadow-md transition">Simpan</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2 bg-blue-950 hover:bg-blue-900 text-blue-200 text-xs rounded-xl border border-blue-800/40">Batal</button>
+                <button type="submit" className="flex-1 py-2 bg-cyan-400 hover:bg-cyan-300 text-blue-950 font-bold text-xs rounded-xl shadow-md">Simpan</button>
               </div>
             </form>
           </div>
@@ -351,7 +327,7 @@ export default function BluDashboardPro() {
 
       {/* MODAL STRUK DIGITAL */}
       {isReceiptOpen && latestTx && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-[#0e1738] border border-cyan-500/30 rounded-3xl w-full max-w-xs p-6 shadow-2xl text-center relative overflow-hidden">
             <div className="w-12 h-12 bg-emerald-950 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
               <CheckCircle2 className="w-6 h-6" />
