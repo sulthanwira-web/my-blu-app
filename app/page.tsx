@@ -1,3 +1,4 @@
+import { BluLogo } from "@/components/BluLogo";
 "use client";
 
 import React, { useState } from "react";
@@ -117,15 +118,24 @@ export default function BluDashboardPro() {
   return (
     <div className="min-h-screen bg-[#070b19] text-white flex justify-center items-center p-0 sm:p-4 font-sans">
       <div className="w-full max-w-md bg-[#0a1128] sm:rounded-3xl border border-blue-900/30 overflow-hidden shadow-2xl flex flex-col min-h-screen sm:min-h-[840px]">
-        
-        {/* Top Header */}
-        <div className="p-5 flex items-center justify-between border-b border-white/5 bg-[#0d1635]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 p-[2px]">
-              <div className="w-full h-full bg-[#0a1128] rounded-[10px] flex items-center justify-center font-bold text-cyan-400 text-base">
-                b
-              </div>
-            </div>
+
+          {/* Top Header */}
+  <div className="p-5 flex items-center justify-between border-b border-white/5 bg-[#0d1635]">
+  <div className="flex items-center gap-3">
+    {/* Panggil Logo B Futuristik Kustom */}
+    <BluLogo />
+  </div>
+  
+  {/* Tombol Ekspor CSV & PDF */}
+  <div className="flex items-center gap-1.5">
+    <button onClick={handleExportCSV} title="Download CSV" className="p-2 text-xs font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg hover:bg-cyan-900/60 transition">
+      <Download className="w-3.5 h-3.5" />
+    </button>
+    <button onClick={handleExportPDF} title="Cetak / Simpan PDF" className="p-2 text-xs font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg hover:bg-cyan-900/60 transition">
+      <FileText className="w-3.5 h-3.5" />
+    </button>
+  </div>
+</div>
             <div>
               <p className="text-xs text-blue-200/65">Selamat datang,</p>
               <h1 className="text-sm font-semibold text-white">Sulthan</h1>
