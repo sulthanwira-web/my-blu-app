@@ -1,0 +1,16 @@
+{
+  "name": "blu by BCA Digital - Personal Financial",
+  "short_name": "blu",
+  "description": "Aplikasi Keuangan Pribadi Sulthan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070b19",
+  "theme_color": "#0a1128",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
