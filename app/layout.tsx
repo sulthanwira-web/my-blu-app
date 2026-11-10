@@ -1,40 +1,29 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+export const viewport: Viewport = {
+  themeColor: "#0d1635",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1, // Mencegah zoom saat tap input di HP
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
-  title: "blu by BCA Digital - Financial Hub",
-  description: "Aplikasi Keuangan Pribadi Sulthan",
-  manifest: "/manifest.json",
-  icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+  title: "bluDashboard Pro - Keuangan",
+  description: "Kelola keuangan ala blu by BCA",
+  manifest: "/manifest.json", // Link ke manifest
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "bluPro",
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-      </head>
-      <body className="bg-[#070b19] text-white min-h-full flex flex-col">
-        {children}
-      </body>
+    <html lang="id">
+      <body>{children}</body>
     </html>
   );
 }
